@@ -1,0 +1,83 @@
+<main class="page admin-page">
+  <section class="admin-content">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a routerLink="/">filmplace</a>
+      <b aria-hidden="true">/</b>
+      <strong>Admin</strong>
+    </nav>
+
+    <section class="admin-panel">
+      <p class="eyebrow">Catalog management</p>
+      <h1>Catalog products</h1>
+      <p>Add cameras, film, and accessories that storefront owners can use in their listings.</p>
+
+      <a class="button" routerLink="/admin/catalog/new">
+        Add catalog product
+      </a>
+    </section>
+
+    <section class="popular-panel">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">Last 30 days</p>
+          <h2>Catalog sales snapshot</h2>
+        </div>
+
+        <span>Completed sales</span>
+      </div>
+
+      @if (statisticsLoading()) {
+      <p class="state">Loading catalog sales statistics...</p>
+      } @else if (statistics(); as statistics) {
+      <div class="statistics-grid">
+        <section class="primary-stat">
+          <strong>{{ statistics.modelSellThroughPercent }}%</strong>
+          <h3>Catalog models sold</h3>
+          <p>{{ statistics.modelsSold }} of {{ statistics.catalogModels }} active models sold at least once.</p>
+        </section>
+
+        <dl>
+          <div>
+            <dt>Models sold</dt>
+            <dd>{{ statistics.modelsSold }}</dd>
+          </div>
+          <div>
+            <dt>Units sold</dt>
+            <dd>{{ statistics.unitsSold }}</dd>
+          </div>
+          <div>
+            <dt>Completed orders</dt>
+            <dd>{{ statistics.completedOrders }}</dd>
+          </div>
+        </dl>
+      </div>
+
+      <section class="sales-ranking" aria-labelledby="top-products-heading">
+        <div class="ranking-heading">
+          <h3 id="top-products-heading">Top 10 sold products</h3>
+          <span>By units sold</span>
+        </div>
+
+        @if (statistics.topProducts.length > 0) {
+        <ol>
+          @for (product of statistics.topProducts; track product.name + product.productType; let index = $index) {
+          <li>
+            <b class="rank">{{ index + 1 }}</b>
+            <div>
+              <strong>{{ product.name }}</strong>
+              <span>{{ product.brand ?? 'Unbranded' }} · {{ product.productType }}</span>
+            </div>
+            <b>{{ product.unitsSold }} sold</b>
+          </li>
+          }
+        </ol>
+        } @else {
+        <p class="state">No completed sales in the last 30 days.</p>
+        }
+      </section>
+      } @else {
+      <p class="state">Catalog sales statistics could not be loaded.</p>
+      }
+    </section>
+  </section>
+</main>

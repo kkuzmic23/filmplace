@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Disallow: /login
+Disallow: /register
+Disallow: /my-account
+Disallow: /my-storefronts
+Disallow: /cart
+Disallow: /orders
+Disallow: /admin
+
+Sitemap: http://localhost:4200/sitemap.xml

@@ -1,0 +1,145 @@
+@use '../../../styles/storefront-themes' as storefront-themes;
+
+@include storefront-themes.styles;
+
+.page {
+  background: linear-gradient(
+    130deg,
+    #f1cbc3 0 20%,
+    #eddec9 20% 40%,
+    #e9eac2 40% 60%,
+    #cfedd9 60% 80%,
+    #e1d0f1 80% 100%
+  );
+  min-height: 100vh;
+  padding: 2rem 0;
+}
+
+.my-storefronts-page {
+  margin: 0 auto;
+  max-width: 1120px;
+}
+
+.page-header {
+  align-items: flex-end;
+  background: #fff;
+  border: 1px solid #494949;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  padding: 1.25rem 1.5rem;
+}
+
+h1,
+h2 {
+  font-family: Georgia, serif;
+  font-weight: 400;
+}
+
+h1 {
+  font-size: 3rem;
+  line-height: 1;
+  margin: 0;
+}
+
+h2 {
+  font-size: 1.75rem;
+  line-height: 1;
+  margin: 0;
+}
+
+.storefront-count {
+  color: #666056;
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.storefront-list,
+.empty,
+.state {
+  background: #fff;
+  border: 1px solid #494949;
+}
+
+.storefront-grid {
+  display: grid;
+}
+
+.storefront-card {
+  align-items: stretch;
+  background: #fff;
+  border-bottom: 1px solid #20221d;
+  color: #20221d;
+  display: flex;
+  gap: 1.5rem;
+  min-height: 12rem;
+  padding: 1.25rem 1.5rem;
+  text-decoration: none;
+
+  &:last-child {
+    border-bottom: 0;
+  }
+
+  &:hover h2 {
+    color: #aa4c36;
+  }
+}
+
+.storefront-details {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+}
+
+.description {
+  color: #666056;
+  line-height: 1.5;
+  margin: 1rem 0 0;
+}
+
+footer {
+  align-items: center;
+  border-top: 1px solid #494949;
+  color: #5a5a51;
+  display: flex;
+  font-size: 0.9rem;
+  justify-content: space-between;
+  margin-top: auto;
+  padding-top: 1rem;
+
+  strong {
+    color: #20221d;
+  }
+}
+
+.storefront-thumbnail {
+  aspect-ratio: 1;
+  object-fit: cover;
+  width: 10rem;
+}
+
+.add-storefront {
+  background: #20221d;
+  border: 0;
+  border-radius: 0;
+  color: #fff;
+  cursor: pointer;
+  display: block;
+  font-size: 2rem;
+  height: 3.5rem;
+  margin: 1rem 0 0 auto;
+  width: 3.5rem;
+}
+
+.empty,
+.state {
+  padding: 2rem;
+  text-align: center;
+}
+
+.error {
+  color: #a43d2e;
+}

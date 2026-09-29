@@ -1,0 +1,87 @@
+<section class="page">
+  <div class="my-storefronts-page">
+    <header class="page-header">
+      <div>
+        <h1>My storefronts</h1>
+      </div>
+
+      @if (storefronts().length > 0) {
+      <p class="storefront-count">
+        {{ storefronts().length }} total
+      </p>
+      }
+    </header>
+
+    @if (loading()) {
+    <p class="state">Loading your storefronts...</p>
+    }
+
+    @else {
+    @if (loadFailed()) {
+    <p class="state error">
+      Your storefronts failed to load.
+    </p>
+    }
+
+    @else {
+    @if (storefronts().length > 0) {
+    <section class="storefront-list">
+      <div class="storefront-grid">
+        @for (storefront of storefronts(); track storefront.id) {
+        <a [class]="'storefront-card storefront-theme-' + storefront.theme"
+          [routerLink]="['/storefronts', storefront.slug]">
+          <div class="storefront-details">
+            <h2>{{ storefront.name }}</h2>
+
+            @if (storefront.description) {
+            <p class="description">
+              {{ storefront.description }}
+            </p>
+            } @else {
+            <p class="description">
+              No description has been added yet.
+            </p>
+            }
+
+            <footer>
+              <span>
+                Opened {{ storefront.createdAt | date: 'MM/yyyy' }}
+              </span>
+              <strong>
+                {{ productCounts()[storefront.id] ?? 0 }} products
+              </strong>
+            </footer>
+          </div>
+
+          @if (productPreviews()[storefront.id]; as product) {
+          <img class="storefront-thumbnail" [src]="buildImagePath(product)" width="160" height="160" loading="lazy"
+            [alt]="product.title" />
+          }
+        </a>
+        }
+      </div>
+    </section>
+    <button class="add-storefront" type="button" aria-label="Create storefront" title="Create storefront"
+      (click)="openStorefrontForm()">
+      +
+    </button>
+    }
+
+    @else {
+    <div class="empty">
+      <strong>No storefronts yet.</strong>
+      <p>Your storefronts will appear here once you create them.</p>
+    </div>
+    <button class="add-storefront" type="button" aria-label="Create storefront" title="Create storefront"
+      (click)="openStorefrontForm()">
+      +
+    </button>
+    }
+    }
+    }
+  </div>
+</section>
+
+@if (formOpen()) {
+<app-storefront-form (closed)="closeStorefrontForm()" (saved)="addStorefront($event)" />
+}

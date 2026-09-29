@@ -1,0 +1,108 @@
+<div class="page">
+  @if (loading()) {
+  <strong class="state">Loading seller profile...</strong>
+  } @else {
+  @if (user(); as user) {
+  <section class="seller-page">
+    <header class="seller-header">
+      <div class="seller-identity">
+        <strong class="avatar">{{ user.displayName.charAt(0) }}</strong>
+        <div>
+          <h1>{{ user.displayName }}</h1>
+          <p>{{ user.email }}</p>
+        </div>
+      </div>
+
+      <div class="stats">
+        <div class="stat">
+          <p>Reputation</p>
+          <strong>{{ user.reputationScore }}</strong>
+        </div>
+
+        <div class="stat">
+          <p>Member since</p>
+          <strong><time [attr.datetime]="user.createdAt">{{ user.createdAt | date: 'MM/yyyy' }}</time></strong>
+        </div>
+      </div>
+    </header>
+
+    <section class="card">
+      <div>
+        <h2>About me</h2>
+        @if (user.bio) {
+        <p class="bio">{{ user.bio }}</p>
+        }
+        @else{
+        <p class="bio">
+          {{ user.displayName }} is part of the Filmplace community for instant cameras, film,
+          and accessories.
+        </p>
+        }
+      </div>
+    </section>
+
+    <section class="seller-storefronts">
+      <div class="section-heading">
+        <div>
+          <h2>{{user.displayName}}'s Storefronts</h2>
+        </div>
+
+        @if (storefronts().length > 0) {
+        <p class="count">
+          {{ storefronts().length }} storefront(s)
+        </p>
+        }
+      </div>
+
+      @if (storefrontsLoading()) {
+      <p class="muted">Loading storefronts...</p>
+      } @else {
+      @if (storefronts().length > 0) {
+      <section class="storefront-list">
+        <div class="storefront-grid">
+          @for (storefront of storefronts(); track storefront.id) {
+          <a [class]="'storefront-card storefront-theme-' + storefront.theme"
+            [routerLink]="['/storefronts', storefront.slug]">
+            <div class="storefront-details">
+              <h3>{{ storefront.name }}</h3>
+
+              @if (storefront.description) {
+              <p>{{ storefront.description }}</p>
+              } @else {
+              <p>This storefront has no description yet.</p>
+              }
+
+              <footer>
+                <span>
+                  Opened {{ storefront.createdAt | date: 'MM/yyyy' }}
+                </span>
+                <strong>
+                  {{ productCounts()[storefront.id] ?? 0 }} products
+                </strong>
+              </footer>
+            </div>
+
+            @if (productPreviews()[storefront.id]; as product) {
+            <img class="storefront-thumbnail" [src]="buildImagePath(product)" width="160" height="160" loading="lazy"
+              [alt]="product.title" />
+            }
+          </a>
+          }
+        </div>
+      </section>
+      } @else {
+      <div class="storefront-placeholder">
+        <strong>No storefronts yet.</strong>
+        <p>This seller does not have any public storefronts.</p>
+      </div>
+      }
+      }
+    </section>
+  </section>
+  } @else {
+  @if (loadFailed()) {
+  <strong class="state error">Seller profile failed to load.</strong>
+  }
+  }
+  }
+</div>

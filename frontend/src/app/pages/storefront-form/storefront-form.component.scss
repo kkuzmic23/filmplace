@@ -1,0 +1,111 @@
+@use '../../../styles/storefront-themes' as storefront-themes;
+
+@include storefront-themes.styles;
+
+.backdrop {
+  align-items: center;
+  background: rgb(32 34 29 / 80%);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  padding: 1.5rem;
+  position: fixed;
+  z-index: 20;
+}
+
+.dialog {
+  background: #fff;
+  border: 1px solid #20221d;
+  max-width: 34rem;
+  width: 100%;
+}
+
+header,
+footer {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+
+header {
+  border-bottom: 1px solid #494949;
+  padding: 1.25rem 1.5rem;
+}
+
+h2 {
+  font-family: Georgia, serif;
+  font-size: 2rem;
+  font-weight: 400;
+  margin: 0;
+}
+
+.close-button,
+.cancel-button {
+  background: transparent;
+  border: 0;
+  color: #5a5a51;
+  cursor: pointer;
+  font: inherit;
+  padding: 0;
+}
+
+form {
+  display: grid;
+  gap: 1rem;
+  padding: 1.5rem;
+}
+
+label {
+  color: #4c473f;
+  display: grid;
+  font-size: 0.9rem;
+  font-weight: 700;
+  gap: 0.5rem;
+}
+
+input,
+textarea,
+select {
+  background: #fff;
+  border: 1px solid #20221d;
+  border-radius: 0;
+  font: inherit;
+  padding: 0.75rem;
+}
+
+textarea {
+  resize: vertical;
+}
+
+.theme-field {
+  align-items: center;
+  display: flex;
+  gap: 0.75rem;
+
+  select {
+    flex: 1;
+  }
+}
+
+.theme-preview {
+  background: linear-gradient(
+    150deg,
+    var(--storefront-color-1) 0 38%,
+    var(--storefront-color-2) 38% 65%,
+    var(--storefront-color-3) 65% 79%,
+    var(--storefront-color-4) 79%
+  );
+  height: 2.5rem;
+  width: 2.5rem;
+}
+
+.error {
+  color: #a43d2e;
+  margin: 0;
+}
+
+footer {
+  border-top: 1px solid #494949;
+  margin: 0 -1.5rem -1.5rem;
+  padding: 1rem 1.5rem;
+}

@@ -1,0 +1,91 @@
+<main class="page catalog-form-page">
+  <section class="catalog-form-content">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a routerLink="/">filmplace</a>
+      <b aria-hidden="true">/</b>
+      <a routerLink="/admin">Admin</a>
+      <b aria-hidden="true">/</b>
+      <strong>New catalog product</strong>
+    </nav>
+
+    <section class="catalog-form-card">
+      <header>
+        <p class="eyebrow">Catalog management</p>
+        <h1>New catalog product</h1>
+      </header>
+
+      <form (ngSubmit)="save()">
+        <div class="field-grid">
+          <label>
+            Product type
+            <select [(ngModel)]="productType" name="productType">
+              <option value="CAMERA">Camera</option>
+              <option value="FILM">Film</option>
+              <option value="ACCESSORY">Accessory</option>
+            </select>
+          </label>
+
+          <label>
+            Brand
+            <input [(ngModel)]="brand" name="brand" required />
+          </label>
+
+          <label class="wide-field">
+            Product name
+            <input [(ngModel)]="name" name="name" required />
+          </label>
+
+          @if (productType === 'CAMERA' || productType === 'FILM') {
+          <label>
+            Format
+            <input [(ngModel)]="format" name="format" />
+          </label>
+          }
+
+          @if (productType === 'CAMERA') {
+          <label>
+            Camera type
+            <input [(ngModel)]="cameraType" name="cameraType" placeholder="FOLDING, BOX, HYBRID..." />
+          </label>
+          }
+
+          @if (productType === 'FILM') {
+          <label>
+            Film type
+            <input [(ngModel)]="filmType" name="filmType" placeholder="COLOR, MONOCHROME..." />
+          </label>
+          }
+
+          @if (productType === 'ACCESSORY') {
+          <label>
+            Accessory type
+            <input [(ngModel)]="accessoryType" name="accessoryType" />
+          </label>
+
+          <label>
+            Compatible formats
+            <input [(ngModel)]="compatibleFormats" name="compatibleFormats" placeholder="SX-70, 600, I-TYPE" />
+          </label>
+          }
+        </div>
+
+        @if (error())
+        {
+        <p class="error">
+          {{ error() }}
+        </p>
+        }
+
+        <footer>
+          <a routerLink="/admin">Cancel</a>
+          <button class="button" type="submit" [disabled]="saving()">
+            @if (saving())
+            { Saving... }
+            @else
+            { Create catalog product }
+          </button>
+        </footer>
+      </form>
+    </section>
+  </section>
+</main>

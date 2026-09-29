@@ -1,0 +1,61 @@
+<div class="backdrop" (click)="close()">
+  <section class="dialog" role="dialog" aria-modal="true" aria-label="Storefront form"
+    (click)="$event.stopPropagation()">
+    <header>
+      @if (isEditing()) {
+      <h2>Edit storefront</h2>
+      } @else {
+      <h2>New storefront</h2>
+      }
+
+      <button type="button" class="close-button" (click)="close()">Cancel</button>
+    </header>
+
+    <form (ngSubmit)="save()">
+      <label>
+        Name
+        <input [(ngModel)]="name" name="name" required />
+      </label>
+
+      <label>
+        URL slug
+        <input [(ngModel)]="slug" name="slug" pattern="[a-z0-9-]+" required />
+      </label>
+
+      <label>
+        Description
+        <textarea [(ngModel)]="description" name="description" rows="4"></textarea>
+      </label>
+
+      <label>
+        Theme
+        <div class="theme-field">
+          <span [class]="'theme-preview storefront-theme-' + theme" aria-hidden="true"></span>
+
+          <select [(ngModel)]="theme" name="theme">
+            @for (themeOption of themes; track themeOption) {
+            <option [value]="themeOption">
+              {{ themeOption }}
+            </option>
+            }
+          </select>
+        </div>
+      </label>
+
+      @if (saveFailed) {
+      <p class="error">The storefront could not be saved. Check the name and URL slug.</p>
+      }
+
+      <footer>
+        <button type="button" class="cancel-button" (click)="close()">Cancel</button>
+        <button type="submit" class="button" [disabled]="saving">
+          @if (saving) {
+          Saving...
+          } @else {
+          Save storefront
+          }
+        </button>
+      </footer>
+    </form>
+  </section>
+</div>

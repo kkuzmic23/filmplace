@@ -1,0 +1,55 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: filmplace-postgres
+    environment:
+      POSTGRES_DB: filmplace
+      POSTGRES_USER: filmplace
+      POSTGRES_PASSWORD: filmplace
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./postgresql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U filmplace -d filmplace"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend-java
+      dockerfile: Dockerfile
+    container_name: filmplace-backend
+    environment:
+      DATABASE_URL: jdbc:postgresql://postgres:5432/filmplace
+      DATABASE_USER: filmplace
+      DATABASE_PASSWORD: filmplace
+      JWT_SECRET: change-this-in-production
+      CORS_ORIGIN: http://localhost:4200
+      IMAGES_PATH: /app/images
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - backend_images:/app/images
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: filmplace-frontend
+    environment:
+      API_URL: http://backend:8080/api
+      SITEMAP_API_URL: http://backend:8080/api/seo/sitemap
+    ports:
+      - "4200:80"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+  backend_images:

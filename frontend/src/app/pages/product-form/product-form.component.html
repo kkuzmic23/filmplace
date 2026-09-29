@@ -1,0 +1,216 @@
+<main class="page product-form-page">
+  @if (loading()) {
+  <strong class="state">Loading product form...</strong>
+  } @else {
+  @if (storefront(); as storefront) {
+  <nav class="breadcrumb" aria-label="Breadcrumb">
+    <a routerLink="/">filmplace</a>
+    <b aria-hidden="true">/</b>
+    <a [routerLink]="['/storefronts', storefront.slug]">{{ storefront.name }}</a>
+    <b aria-hidden="true">/</b>
+    @if (isEditingTRue())
+    {
+    <strong>Edit product</strong>
+    }
+    @else
+    {
+    <strong>Add product</strong>
+    }
+  </nav>
+
+  <section class="product-form-card">
+    <header>
+      <p class="form-kicker">{{ storefront.name }}</p>
+      @if (isEditingTRue())
+      {
+      <h1>Edit product</h1>
+      }
+      @else
+      {
+      <h1>Add product</h1>
+      }
+    </header>
+
+    <form (ngSubmit)="save()">
+
+      <div class="form-section">
+        <h2>Product tags</h2>
+
+        <div class="field-grid">
+          <label>
+            Type
+            <select [(ngModel)]="type" name="type" (ngModelChange)="typeChanged()" required>
+              <option value="" disabled>
+                Select type
+              </option>
+
+              @for (option of getAllTypeOptions(); track option) {
+              <option [value]="option">{{ option }}</option>
+              }
+            </select>
+          </label>
+
+          <label>
+            Brand
+            <select [(ngModel)]="brand" name="brand" (ngModelChange)="brandChanged()" [disabled]="type.length === 0"
+              required>
+              <option value="" disabled>
+                Select brand
+              </option>
+
+              @for (option of getAllBrandOptions(); track option) {
+              <option [value]="option">
+                {{ option }}
+              </option>
+              }
+            </select>
+          </label>
+
+          <label class="wide-field">
+            @if (type === 'CAMERA')
+            { Camera model }
+            @else if (type === 'FILM')
+            { Film }
+            @else { Accessory }
+            <select [(ngModel)]="catalogProductId" name="catalogProductId" (ngModelChange)="productChanged()"
+              [disabled]="brand.length === 0" required>
+              <option value="" disabled>
+                Select product
+              </option>
+
+              @for (option of getAllProductOptions(); track option.id) {
+              <option [value]="option.id">
+                {{ option.name }}
+              </option>
+              }
+            </select>
+          </label>
+        </div>
+
+        @if (getSelectedCatalogProduct(); as product) {
+        <div class="catalog-tags">
+          <b class="type" [class]="'type type-' + product.productType.toLowerCase()">{{ product.productType }}</b>
+          <b>{{ product.brand }}</b>
+          @if (product.format) { <b>{{ product.format }}</b> }
+          @if (product.cameraType) { <b>{{ product.cameraType }}</b> }
+          @if (product.filmType) { <b>{{ product.filmType }}</b> }
+          @if (product.accessoryType) { <b>{{ product.accessoryType }}</b> }
+          @if (product.compatibleFormats) { <b>{{ product.compatibleFormats }}</b> }
+        </div>
+        }
+      </div>
+
+      <div class="form-section">
+        <h2>Listing details</h2>
+        <div class="field-grid">
+          <label class="wide-field">
+            Listing title
+            <input [(ngModel)]="titleOverride" name="titleOverride" placeholder="Use the catalog name" />
+          </label>
+
+          <label>
+            Price in EUR
+            <input [(ngModel)]="price" name="price" type="number" min="0" step="0.01" required />
+          </label>
+
+          <label>
+            Quantity
+            <input [(ngModel)]="availableQuantity" name="availableQuantity" type="number" min="0" step="1" required />
+          </label>
+
+          @if (type === 'CAMERA' || type === 'ACCESSORY') {
+          <label>
+            Condition
+            <select [(ngModel)]="workingCondition" name="workingCondition">
+              <option value="">Not specified</option>
+              <option value="NEW">New</option>
+              <option value="EXCELLENT">Excellent</option>
+              <option value="GOOD">Good</option>
+              <option value="FAIR">Fair</option>
+              <option value="FOR_PARTS">For parts</option>
+            </select>
+          </label>
+          }
+
+          @if (type === 'CAMERA') {
+          <label>
+            Modifications
+            <select [(ngModel)]="hasMods" name="hasMods">
+              <option value="">Not specified</option>
+              <option value="no">No modifications</option>
+              <option value="yes">Modified</option>
+            </select>
+          </label>
+          }
+
+          @if (type === 'FILM') {
+          <label>
+            Expiry date
+            <input [(ngModel)]="expiryDate" name="expiryDate" type="date" />
+          </label>
+
+          <label>
+            Storage
+            <select [(ngModel)]="storageCondition" name="storageCondition">
+              <option value="">Not specified</option>
+              <option value="REFRIGERATED">Refrigerated</option>
+              <option value="ROOM_TEMPERATURE">Room temperature</option>
+              <option value="UNKNOWN">Unknown</option>
+            </select>
+          </label>
+          }
+
+          <label class="wide-field">
+            Description
+            <textarea [(ngModel)]="description" name="description" rows="5"></textarea>
+          </label>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <h2>Pictures</h2>
+        <label class="upload-field">
+          <span>Select up to 8 images</span>
+          <input type="file" accept="image/*" multiple (change)="saveUploadedImages($event)" />
+        </label>
+
+        @if (selectedFiles().length > 0) {
+        <ul class="selected-images">
+          @for (file of selectedFiles(); track file.name; let index = $index) {
+          <li>
+            <span>{{ file.name }}</span>
+            <button type="button" (click)="removeImage(index)">Remove</button>
+          </li>
+          }
+        </ul>
+        }
+      </div>
+
+      @if (saveFailed()) {
+      <p class="error">The product could not be saved. Check the listing details and image files.</p>
+      }
+
+      <footer>
+        <a class="cancel-button" [routerLink]="['/storefronts', storefront.slug]">Cancel</a>
+        <button class="button" type="submit" [disabled]="saving()">
+          @if (saving())
+          {
+          Saving product...
+          }
+          @else if (isEditingTRue())
+          {
+          Save product
+          }
+          @else
+          {
+          Add product
+          }
+        </button>
+      </footer>
+    </form>
+  </section>
+  } @else {
+  <strong class="state error">The product form could not be loaded.</strong>
+  }
+  }
+</main>

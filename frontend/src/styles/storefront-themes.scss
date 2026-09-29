@@ -1,0 +1,36 @@
+@mixin styles {
+  .storefront-theme-theme-1 {
+    --storefront-color-1: #8dae91;
+    --storefront-color-2: #ddcc9e;
+    --storefront-color-3: #bf9482;
+    --storefront-color-4: #745369;
+  }
+
+  .storefront-theme-theme-2 {
+    --storefront-color-1: #d9d499;
+    --storefront-color-2: #e7a29d;
+    --storefront-color-3: #ddcaa1;
+    --storefront-color-4: #a8c1da;
+  }
+
+  .storefront-theme-theme-3 {
+    --storefront-color-1: #9dc6b8;
+    --storefront-color-2: #c0d9c3;
+    --storefront-color-3: #d9e0ce;
+    --storefront-color-4: #a78983;
+  }
+
+  .storefront-theme-theme-4 {
+    --storefront-color-1: #a2b1ce;
+    --storefront-color-2: #8db6d7;
+    --storefront-color-3: #c39dd4;
+    --storefront-color-4: #ad99bd;
+  }
+
+  .storefront-theme-theme-5 {
+    --storefront-color-1: #e0a6a6;
+    --storefront-color-2: #dfbb9f;
+    --storefront-color-3: #d5cf9e;
+    --storefront-color-4: #c1bf84;
+  }
+}

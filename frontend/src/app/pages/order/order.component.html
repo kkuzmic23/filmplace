@@ -1,0 +1,95 @@
+<main class="page order-page">
+  <section class="order-content">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a routerLink="/">filmplace</a>
+      <b aria-hidden="true">/</b>
+      <a routerLink="/orders">Orders</a>
+      <b aria-hidden="true">/</b>
+      <strong>Order details</strong>
+    </nav>
+
+    @if (loading()) {
+    <p class="state">Loading order...</p>
+    } @else if (order(); as order) {
+    <header class="order-heading">
+      <div>
+        <p class="eyebrow">
+          Order placed {{ order.createdAt | date: 'dd MMM yyyy, HH:mm' }}
+        </p>
+
+        <h1>{{ order.storefrontName }}</h1>
+      </div>
+      <span class="order-status" [class.completed]="order.status === 'COMPLETED'"
+        [class.cancelled]="order.status === 'CANCELLED'">
+        {{ order.status }}
+      </span>
+    </header>
+
+    <div class="order-layout">
+      <section class="order-items">
+        <h2>Items</h2>
+        <ul>
+          @for (item of order.items; track item.id) {
+          <li>
+            <div>
+              <strong>{{ item.title }}</strong>
+              <span>
+                {{ item.productType }} · {{ item.quantity }} item{{ item.quantity === 1 ? '' : 's' }}
+              </span>
+            </div>
+
+            <strong>
+              {{ item.unitPriceCents * item.quantity / 100 | currency: 'EUR' }}
+            </strong>
+          </li>
+          }
+        </ul>
+      </section>
+
+      <aside class="order-info">
+        <section>
+          <p class="eyebrow">Buyer</p>
+          <a class="buyer-card" [routerLink]="['/u', order.buyerId]"
+            [attr.aria-label]="'View profile for ' + order.buyerDisplayName">
+            <span class="profile-picture" aria-hidden="true">
+              {{ order.buyerDisplayName.charAt(0) }}
+            </span>
+
+            <span>
+              <strong>{{ order.buyerDisplayName }}</strong>
+              <small>{{ order.buyerEmail }}</small>
+            </span>
+          </a>
+        </section>
+
+        <section class="total">
+          <span>Total</span>
+          <strong>{{ total(order) | currency: 'EUR' }}</strong>
+        </section>
+
+        @if (nextSellerStatus(order); as nextStatus) {
+        <div class="actions">
+          <button class="button" type="button" [disabled]="updating()" (click)="updateStatus(order, nextStatus)">
+            @if (updating()) { Updating... } @else { {{ sellerActionLabel(order) }} }
+          </button>
+          @if (canCancel(order)) {
+          <button class="deny-button" type="button" [disabled]="updating()"
+            (click)="updateStatus(order, 'CANCELLED')">Cancel order</button>
+          }
+        </div>
+        }
+        @if (!nextSellerStatus(order) && canCancel(order)) {
+        <div class="actions">
+          <button class="deny-button" type="button" [disabled]="updating()"
+            (click)="updateStatus(order, 'CANCELLED')">Cancel order</button>
+        </div>
+        }
+      </aside>
+    </div>
+    } @else {
+    <p class="state error">{{ error() || 'Order not found.' }}</p>
+    }
+
+    @if (error() && order()) { <p class="error">{{ error() }}</p> }
+  </section>
+</main>

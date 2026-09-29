@@ -1,0 +1,105 @@
+<main class="page cart-page">
+  <section class="cart-content">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a routerLink="/">filmplace</a>
+      <b aria-hidden="true">/</b>
+      <strong>Cart</strong>
+    </nav>
+
+    <header class="cart-heading">
+      <h1>Your cart</h1>
+      <span>{{ cart.itemCount() }} items</span>
+    </header>
+
+    @if (cart.loading()) {
+    <p class="state">Loading cart...</p>
+    }
+
+    @else if (checkoutComplete()) {
+    <section class="checkout-success">
+      <h2>Order placed</h2>
+      <p>Your order has been created. Sellers can now prepare the items.</p>
+
+      <a class="button" routerLink="/explore">
+        Continue exploring
+      </a>
+    </section>
+    }
+
+    @else if (cart.items().length === 0) {
+    <section class="empty-cart">
+      <h2>Your cart is empty</h2>
+
+      <a class="button" routerLink="/explore">
+        Explore products
+      </a>
+    </section>
+    }
+
+    @else {
+    <div class="cart-layout">
+      <section class="cart-items">
+        @for (item of cart.items(); track item.productId) {
+        <article class="cart-item">
+          <a class="item-image" [routerLink]="['/storefronts', item.storefrontSlug, 'products', item.productSlug]">
+            <img [src]="imagePath(item)" width="240" height="180" loading="lazy" [alt]="item.title" />
+          </a>
+
+          <div class="item-details">
+            <p>{{ item.storefrontName }}</p>
+            <a [routerLink]="['/storefronts', item.storefrontSlug, 'products', item.productSlug]">
+              {{ item.title }}
+            </a>
+            <span>{{ item.productType }}</span>
+          </div>
+
+          <div class="item-actions">
+            <div class="quantity-control">
+              <button type="button" aria-label="Decrease quantity"
+                [disabled]="item.quantity <= 1 || updatingProductId() === item.productId"
+                (click)="changeQuantity(item, -1)">-</button>
+
+              <output>{{ item.quantity }}</output>
+
+              <button type="button" aria-label="Increase quantity"
+                [disabled]="item.quantity >= item.availableQuantity || updatingProductId() === item.productId"
+                (click)="changeQuantity(item, 1)">+</button>
+            </div>
+
+            <button class="remove-button" type="button" [disabled]="updatingProductId() === item.productId"
+              (click)="removeItem(item)">Remove</button>
+          </div>
+
+          <strong class="item-total">{{ itemTotal(item) | currency: 'EUR' }}</strong>
+        </article>
+        }
+      </section>
+
+      <aside class="cart-summary">
+        <h2>Order summary</h2>
+        <div>
+          <span>Items</span>
+          <strong>{{ cart.itemCount() }}</strong>
+        </div>
+
+        <div class="total">
+          <span>Total</span>
+          <strong>{{ total() | currency: 'EUR' }}</strong>
+        </div>
+
+        <button class="button" type="button" [disabled]="checkoutLoading()" (click)="checkout()">
+          @if (checkoutLoading())
+          { Placing order... }
+          @else
+          { Place order }
+        </button>
+      </aside>
+    </div>
+    }
+
+    @if (error())
+    {
+    <p class="error">{{ error() }}</p>
+    }
+  </section>
+</main>

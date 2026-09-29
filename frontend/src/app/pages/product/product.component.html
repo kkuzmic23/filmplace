@@ -1,0 +1,237 @@
+<section class="page">
+  @if (loading()) {
+  <p class="state">Loading product...</p>
+  }
+
+  @if (error()) {
+  <p class="loading error">{{ error() }}</p>
+  }
+
+  @if (product(); as product) {
+  <nav class="breadcrumb" aria-label="Breadcrumb">
+    <ol>
+      <li><a routerLink="/">Filmplace</a></li>
+
+      @if (storefront(); as storefront) {
+      <li><a [routerLink]="['/u', storefront.ownerId]">{{ storefront.ownerDisplayName }}</a></li>
+      <li><a [routerLink]="['/storefronts', storefront.slug]">{{ storefront.name }}</a></li>
+      } @else {
+      <li><a [routerLink]="['/storefronts', product.storefrontSlug]">{{ product.storefrontName }}</a></li>
+      }
+
+      <li aria-current="page">{{ product.title }}</li>
+    </ol>
+  </nav>
+
+  @if (storefront(); as storefront) {
+  @if (isOwner(storefront)) {
+  <section class="owner-panel" [class]="'owner-panel storefront-theme-' + storefront.theme"
+    aria-label="Product management">
+    <div>
+      <p class="owner-label">Owner panel</p>
+      <p class="panel-title">Manage this product</p>
+    </div>
+
+    <div class="owner-actions">
+      <a class="button" [routerLink]="['/storefronts', storefront.slug, 'products', product.id, 'edit']">Edit
+        product</a>
+      <button class="add-product-button" type="button"
+        [disabled]="(product.status !== 'ACTIVE' && product.status !== 'ARCHIVED') || updating()"
+        (click)="toggleProductStatus(product)">
+        @if (product.status === 'ARCHIVED') {
+        @if (updating())
+        {
+        Activating...
+        }
+        @else
+        {
+        Activate product
+        }
+        } @else {
+        @if (updating())
+        {
+        Deactivating...
+        }
+        @else
+        {
+        Deactivate product
+        }
+        }
+      </button>
+      <button class="delete-storefront-button" type="button" [disabled]="product.status !== 'ARCHIVED' || deleting()"
+        (click)="deleteProduct(product)">
+        @if (deleting())
+        {
+        Deleting...
+        }
+        @else
+        {
+        Delete product
+        }
+      </button>
+    </div>
+
+    @if (actionFailed()) {
+    <p class="delete-error">The product action could not be completed.</p>
+    }
+  </section>
+  }
+  }
+
+  <article class="product-detail-card">
+    <div class="media">
+      <img [src]="getMainImageURL(product)"
+        [attr.srcset]="product.images[0] ? imageSrcset(product.images[0].imageUrl) : null"
+        sizes="(max-width: 760px) 100vw, 50vw" width="1200" height="1200" loading="eager" fetchpriority="high"
+        [alt]="product.title + ', main product image'" />
+
+      @if (product.images.length > 0) {
+      <div class="thumbs">
+        @for (image of product.images.slice(0, 4); track image.id; let index = $index) {
+
+        <button type="button" [class.more-images]="index === 3 && product.images.length > 4"
+          [attr.aria-label]="'View image ' + (index + 1) + ' of ' + product.images.length" (click)="openGallery(index)">
+
+          <img [src]="imagePath(image.imageUrl, 480)" width="120" height="120" loading="lazy"
+            [alt]="product.title + ', product image ' + (index + 1)" />
+
+          @if (index === 3 && product.images.length > 4) {
+          <span aria-hidden="true">+{{ product.images.length - 4 }}</span>
+          }
+        </button>
+        }
+      </div>
+      }
+    </div>
+
+    <div class="content">
+      <h1>{{ product.title }}</h1>
+
+      <div class="seller-profile">
+
+        @if (storefront(); as storefront) {
+        <span class="profile-picture" aria-hidden="true">
+          {{ storefront.ownerDisplayName.charAt(0) }}
+        </span>
+        <div>
+          <a [routerLink]="['/u', storefront.ownerId]">{{ storefront.ownerDisplayName }}</a>
+          <a [routerLink]="['/storefronts', storefront.slug]">{{ storefront.name }}</a>
+        </div>
+        } @else {
+        <span class="profile-picture" aria-hidden="true">
+          {{ product.storefrontName.charAt(0) }}
+        </span>
+        <div>
+          <strong>{{ product.storefrontName }}</strong>
+        </div>
+        }
+      </div>
+
+      <div class="tags">
+        @for (tag of tags(); track tag.label) {
+        <b [ngClass]="tag.className">
+          {{ tag.label }}
+        </b>
+        }
+      </div>
+
+      @if (product.description) {
+      <p>{{ product.description }}</p>
+      } @else {
+      <p>No description has been added for this product.</p>
+      }
+
+      <div class="purchase-block">
+        <p class="price">
+          {{ price(product) | currency: 'EUR' }}
+        </p>
+        <button class="button" type="button" [disabled]="!canAddToCart(product) || addingToCart()"
+          (click)="addToCart(product)">
+          @if (addingToCart())
+          {
+          Adding...
+          }
+          @else if
+          (cartMessage() === 'Added to cart.')
+          {
+          Added to cart
+          }
+          @else
+          {
+          Add to cart
+          }
+        </button>
+      </div>
+    </div>
+  </article>
+
+  @if (similarProducts().length > 0) {
+  <section class="similar-products" aria-labelledby="similar-products-heading">
+    <header>
+      <p class="eyebrow">Keep exploring</p>
+      <h2 id="similar-products-heading">You may also like</h2>
+    </header>
+
+    <div class="similar-grid">
+      @for (similarProduct of similarProducts(); track similarProduct.id) {
+      <article class="similar-card">
+        <a [routerLink]="['/storefronts', similarProduct.storefrontSlug, 'products', similarProduct.productSlug]">
+          <img [src]="getCardImageURL(similarProduct)"
+            [attr.srcset]="similarProduct.images[0] ? imageSrcset(similarProduct.images[0].imageUrl) : null"
+            sizes="(max-width: 760px) 100vw, 25vw" width="480" height="360" loading="lazy"
+            [alt]="similarProduct.title" />
+        </a>
+        <div>
+          <p>
+            <b class="type" [ngClass]="'type-' + similarProduct.productType.toLowerCase()">
+              {{ similarProduct.productType }}
+            </b>
+            <strong>{{ price(similarProduct) | currency: 'EUR' }}</strong>
+          </p>
+          <h3>
+            <a [routerLink]="['/storefronts', similarProduct.storefrontSlug, 'products', similarProduct.productSlug]">
+              {{ similarProduct.title }}
+            </a>
+          </h3>
+          <span>{{ similarProduct.storefrontName }}</span>
+        </div>
+      </article>
+      }
+      @if (similarProducts().length < 4) {
+      <div class="similar-empty" [style.grid-column]="'span ' + (4 - similarProducts().length)">
+        <p>That’s all the similar items we found right now.</p>
+      </div>
+      }
+    </div>
+  </section>
+  }
+
+  @if (getCurrentGalleryImage(product); as image) {
+  <div class="gallery-backdrop" (click)="closeGallery()">
+    <section class="gallery-dialog" role="dialog" aria-modal="true" aria-label="Product image gallery"
+      (click)="$event.stopPropagation()">
+
+      <button class="gallery-close" type="button" aria-label="Close gallery" (click)="closeGallery()">
+        Close
+      </button>
+
+      <img class="gallery-image" [src]="imagePath(image.imageUrl)" [attr.srcset]="imageSrcset(image.imageUrl)"
+        sizes="90vw" width="1200" height="900" loading="lazy" [alt]="product.title + ', enlarged product image'" />
+
+      <div class="gallery-controls">
+        <button type="button" (click)="previousImage(product)">
+          <- </button>
+
+            <span>
+              {{ getGalleryPosition() }} of {{ product.images.length }}
+            </span>
+
+            <button type="button" (click)="nextImage(product)">
+              ->
+            </button>
+      </div>
+    </section>
+  </div>
+  }
+  }
+</section>

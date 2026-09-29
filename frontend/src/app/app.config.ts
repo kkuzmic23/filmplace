@@ -1,0 +1,20 @@
+import { ApplicationConfig, InjectionToken, provideBrowserGlobalErrorListeners } from '@angular/core';
+import { provideRouter } from '@angular/router';
+
+import { routes } from './app.routes';
+import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
+import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
+import { authInterceptor } from './auth/auth.interceptor';
+
+export const PUBLIC_API_URL = 'http://localhost:8080/api';
+export const API_URL = new InjectionToken<string>('API_URL');
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideBrowserGlobalErrorListeners(),
+    provideRouter(routes),
+    provideClientHydration(withEventReplay()),
+    provideHttpClient(withFetch(), withInterceptors([authInterceptor])),
+    { provide: API_URL, useValue: PUBLIC_API_URL },
+  ],
+};

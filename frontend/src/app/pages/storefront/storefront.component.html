@@ -1,0 +1,188 @@
+<div class="page">
+
+  @if (loading()) {
+  <strong class="state">
+    Loading storefront...
+  </strong>
+  } @else {
+
+  @if (storefront(); as storefront) {
+  <section class="storefront-page">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <ol>
+        <li><a routerLink="/">Filmplace</a></li>
+        <li><a [routerLink]="['/u', storefront.ownerId]">{{ storefront.ownerDisplayName }}</a></li>
+        <li aria-current="page">{{ storefront.name }}</li>
+      </ol>
+    </nav>
+
+    <header class="storefront-banner" [class]="'storefront-banner storefront-theme-' + storefront.theme">
+      <div class="banner-lines" aria-hidden="true"></div>
+
+      <div class="banner-content">
+        <div class="storefront-info">
+          <h1>{{ storefront.name }}</h1>
+
+          @if (storefront.description) {
+          <p>{{ storefront.description }}</p>
+          }
+          @else {
+          <p>This seller has not added a storefront description yet.</p>
+          }
+        </div>
+
+        <a class="banner-seller" [routerLink]="['/u', storefront.ownerId]"
+          [attr.aria-label]="'View profile for ' + storefront.ownerDisplayName">
+          <span class="profile-picture" aria-hidden="true">
+            {{ storefront.ownerDisplayName.charAt(0) }}
+          </span>
+
+          <div>
+            <strong>
+              {{ storefront.ownerDisplayName }}
+            </strong>
+            <p>Opened <time [attr.datetime]="storefront.createdAt">{{ storefront.createdAt | date: 'MM/yyyy' }}</time>
+            </p>
+          </div>
+        </a>
+      </div>
+    </header>
+
+    @if (isOwner(storefront)) {
+    <section class="owner-panel" [class]="'owner-panel storefront-theme-' + storefront.theme">
+      <div>
+        <p class="owner-label">Owner panel</p>
+      </div>
+
+      <div class="owner-actions">
+        <button class="button" type="button" (click)="openStorefrontForm()">Edit storefront</button>
+        <a class="add-product-button" [routerLink]="['/storefronts', storefront.slug, 'products', 'new']">Add
+          product</a>
+        <button class="delete-storefront-button" type="button"
+          title="A storefront can only be deleted when it has no products"
+          [disabled]="products().length > 0 || deleting()" (click)="deleteStorefront(storefront)">
+          @if (deleting()) {
+          Deleting...
+          } @else {
+          Delete storefront
+          }
+        </button>
+      </div>
+
+      @if (deleteFailed()) {
+      <p class="delete-error">The storefront could not be deleted.</p>
+      }
+    </section>
+    }
+
+    <section class="card products-card" aria-labelledby="storefront-listings-heading">
+      <div class="section-heading">
+        <div>
+          <h2 id="storefront-listings-heading">Active listings</h2>
+          <p class="eyebrow">
+            {{ products().length }} Products
+          </p>
+        </div>
+
+        @if (products().length > 0) {
+        <div class="pager-summary">
+          Page {{ currentPage() }} of {{ totalPages() }}
+        </div>
+        }
+      </div>
+
+      @if (productsLoading()) {
+      <p class="muted">Loading products...</p>
+      }
+      @else {
+
+      @if (pageProducts().length > 0) {
+      <div class="product-grid">
+
+        @for (product of pageProducts(); track product.id; let index = $index) {
+        <article>
+          <a class="product-card" [routerLink]="['/storefronts', storefront.slug, 'products', product.productSlug]">
+            <div class="image-link">
+              <img [src]="buildImagePath(product)" [attr.srcset]="buildImageSrcset(product)"
+                sizes="(max-width: 700px) 100vw, (max-width: 1100px) 50vw, 33vw" width="480" height="360"
+                [attr.loading]="index === 0 ? 'eager' : 'lazy'" [attr.fetchpriority]="index === 0 ? 'high' : null"
+                [alt]="product.title" />
+            </div>
+
+            <div class="product-content">
+              <div class="product-meta">
+                <b class="type" [ngClass]="'type-' + product.productType.toLowerCase()">
+                  {{ product.productType }}
+                </b>
+                @if (product.status === 'ARCHIVED') {
+                <b class="product-status">Deactivated</b>
+                }
+                <strong>
+                  {{ price(product) | currency: 'EUR' }}
+                </strong>
+              </div>
+
+              <h3>
+                {{ product.title }}
+              </h3>
+
+              <div class="tags">
+                <b [ngClass]="brandClass(product)">{{ product.catalogBrand }}</b>
+
+                @if (product.cameraFormat) {
+                <b>{{ product.cameraFormat }}</b>
+                }
+
+                @if (product.filmFormat) {
+                <b>{{ product.filmFormat }}</b>
+                }
+
+                @if (product.filmType) {
+                <b>{{ product.filmType }}</b>
+                }
+              </div>
+
+              @if (product.description) {
+              <p>{{ product.description }}</p>
+              } @else {
+              <p>No product description.</p>
+              }
+            </div>
+          </a>
+        </article>
+        }
+      </div>
+
+      <div class="pagination">
+        <button type="button" (click)="previousPage()" [disabled]="currentPage() <= 1">
+          Previous
+        </button>
+
+        <output>{{ currentPage() }} / {{ totalPages() }}</output>
+
+        <button type="button" (click)="nextPage()" [disabled]="currentPage() >= totalPages()">
+          Next
+        </button>
+      </div>
+      } @else {
+      <div class="empty">
+        <strong>No active products yet.</strong>
+        <p>This storefront is ready, but there are no active listings to show.</p>
+      </div>
+      }
+      }
+    </section>
+  </section>
+  } @else {
+  @if (loadFailed()) {
+  <strong class="state error">Storefront failed to load.</strong>
+  }
+  }
+  }
+</div>
+
+@if (storefrontFormOpen()) {
+@if (storefront(); as storefront) {
+<app-storefront-form [storefront]="storefront" (closed)="closeStorefrontForm()" (saved)="updateStorefront($event)" />
+}
+}

@@ -1,0 +1,98 @@
+@if (loading()) {
+<strong>Loading profile...</strong>
+} @else {
+@if (profile(); as profile) {
+<div class="page">
+  <section class="profile-page">
+    <header class="profile-header">
+      <div class="profile-identity">
+        <strong class="profile-picture" aria-hidden="true">{{ profile.displayName.charAt(0) }}</strong>
+        <div>
+          <h1>{{ profile.displayName }}</h1>
+          <p>{{ profile.email }}</p>
+        </div>
+      </div>
+
+      <div class="stats">
+        <div class="stat">
+          <p>Reputation</p>
+          <strong>{{ profile.reputationScore }}</strong>
+        </div>
+
+        <div class="stat">
+          <p>Created At</p>
+          <strong>{{ profile.createdAt | date: 'MM/yyyy' }}</strong>
+        </div>
+
+        <div class="stat">
+          <p>Updated At</p>
+          <strong>{{ profile.updatedAt | date: 'MM/yyyy' }}</strong>
+        </div>
+      </div>
+    </header>
+
+    <section class="card">
+      <h2>Account details</h2>
+
+      <div class="grid">
+        <label class="full">
+          Display name
+          <input [(ngModel)]="displayName" type="text" />
+        </label>
+
+        <label>
+          First name
+          <input [(ngModel)]="firstName" type="text" />
+        </label>
+
+        <label>
+          Last name
+          <input [(ngModel)]="lastName" type="text" />
+        </label>
+
+        <label class="full">
+          Email
+          <input [(ngModel)]="email" type="email" />
+        </label>
+
+        <label class="full">
+          Bio
+          <textarea [(ngModel)]="bio" rows="4" maxlength="1000"
+            placeholder="Tell people about your instant photography interests"></textarea>
+        </label>
+
+        <label class="full">
+          New password
+          <input [(ngModel)]="password" type="password" placeholder="Leave empty to keep current password" />
+        </label>
+      </div>
+
+      <div class="actions">
+        <button class="button" (click)="save()" [disabled]="saving()">
+          @if (saving()) { Saving... }
+          @else { Save changes }
+        </button>
+
+        @if (success()) {
+        <strong class="success">Changes saved.</strong>
+        }
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Quick links</h2>
+
+      <div class="links">
+        <a routerLink="/my-storefronts"> My storefronts → </a>
+
+        <a routerLink="/explore"> Browse marketplace → </a>
+      </div>
+    </section>
+  </section>
+</div>
+} @else {
+@if (loadFailed()) {
+<strong>Profile loading failed.</strong>
+}
+}
+}

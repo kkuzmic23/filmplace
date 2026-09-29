@@ -1,0 +1,186 @@
+<div class="page">
+  <section class="explore-page">
+    <header class="page-heading">
+      <h1>Explore the market</h1>
+      <p>Browse instant cameras, film, and accessories from Filmplace sellers.</p>
+    </header>
+
+    <section class="card filters-card">
+      <form [formGroup]="formFilters">
+        <label class="search-field">
+          Search
+          <input formControlName="q" type="search" placeholder="SX-70, i-Type, Instax..." />
+        </label>
+
+        <div class="filters">
+          <label>
+            Type
+            <select formControlName="type">
+              <option value="">All types</option>
+
+              @for (option of typeOptions(); track option.value) {
+              <option [value]="option.value">
+                {{ option.label }}
+              </option>
+              }
+            </select>
+          </label>
+
+          <label>
+            Brand
+            <select formControlName="brand">
+              <option value="">All brands</option>
+
+              @for (option of brandOptions(); track option.value) {
+              <option [value]="option.value">
+                {{ option.label }}
+              </option>
+              }
+            </select>
+          </label>
+
+          <label [class.disabled-filter]="cameraFiltersDisabled()">
+            Camera
+            <select formControlName="cameraModel">
+              <option value="">Any camera</option>
+
+              @for (option of cameraOptions(); track option.value) {
+              <option [value]="option.value">
+                {{ option.label }}
+              </option>
+              }
+            </select>
+          </label>
+
+          <label [class.disabled-filter]="cameraFiltersDisabled()">
+            Camera format
+            <select formControlName="cameraFormat">
+              <option value="">Any camera format</option>
+
+              @for (option of cameraFormatOptions(); track option.value) {
+              <option [value]="option.value">
+                {{ option.label }}
+              </option>
+              }
+            </select>
+          </label>
+
+          <label [class.disabled-filter]="filmFiltersDisabled()">
+            Film format
+            <select formControlName="filmFormat">
+              <option value="">Any film format</option>
+
+              @for (option of filmFormatOptions(); track option.value) {
+              <option [value]="option.value">
+                {{ option.label }}
+              </option>
+              }
+            </select>
+          </label>
+
+          <label [class.disabled-filter]="filmFiltersDisabled()">
+            Film type
+            <select formControlName="filmType">
+              <option value="">Any film type</option>
+
+              @for (option of filmTypeOptions(); track option.value) {
+              <option [value]="option.value">
+                {{ option.label }}
+              </option>
+              }
+            </select>
+          </label>
+        </div>
+      </form>
+    </section>
+
+    <section class="card" aria-labelledby="listings-heading">
+      <div class="section-heading">
+        <div>
+          <h2 id="listings-heading">Listings</h2>
+          <p class="eyebrow">{{ resultEstimate() }}</p>
+        </div>
+
+        @if (catalogLoading()) {
+        <p class="muted">Loading filters...</p>
+        }
+      </div>
+
+      @if (loading()) {
+      <p class="muted">Loading products...</p>
+      } @else {
+      @if (loadFailed()) {
+      <div class="empty error">
+        <strong>Products failed to load.</strong>
+        <p>Please try again later.</p>
+      </div>
+      } @else {
+      @if (products().length > 0) {
+      <div class="product-grid">
+        @for (product of pageProducts(); track product.id; let index = $index) {
+        <article class="product-card">
+          <a class="image-link"
+            [routerLink]="['/storefronts', product.storefrontSlug, 'products', product.productSlug]">
+            <img [src]="buildImagePath(product)" [attr.srcset]="buildImageSrcset(product)"
+              sizes="(max-width: 700px) 100vw, (max-width: 1100px) 50vw, 33vw" width="480" height="360"
+              [attr.loading]="index === 0 ? 'eager' : 'lazy'" [attr.fetchpriority]="index === 0 ? 'high' : null"
+              [alt]="product.title" />
+          </a>
+
+          <div class="product-content">
+            <div class="product-meta">
+              <b class="type" [ngClass]="productTypeClass(product)">
+                {{ product.productType }}
+              </b>
+              <strong>{{ price(product) | currency: 'EUR' }}</strong>
+            </div>
+
+            <h3>
+              <a [routerLink]="[
+                          '/storefronts',
+                          product.storefrontSlug,
+                          'products',
+                          product.productSlug,
+                        ]">
+                {{ product.title }}
+              </a>
+            </h3>
+
+            <div class="tags">
+              <b [ngClass]="brandClass(product)">{{ product.catalogBrand }}</b>
+
+              @if (product.cameraFormat) {
+              <b>{{ product.cameraFormat }}</b>
+              }
+
+              @if (product.filmFormat) {
+              <b>{{ product.filmFormat }}</b>
+              }
+
+              @if (product.filmType) {
+              <b>{{ product.filmType }}</b>
+              }
+            </div>
+
+            <p>{{ product.storefrontName }}</p>
+          </div>
+        </article>
+        }
+      </div>
+
+      <nav class="pagination" aria-label="Product pages">
+        <button type="button" (click)="previousPage()" [disabled]="currentPage() <= 1">Previous</button>
+        <output>Page {{ currentPage() }} of {{ totalPages() }}</output>
+        <button type="button" (click)="nextPage()" [disabled]="currentPage() >= totalPages()">Next</button>
+      </nav>
+      } @else {
+      <div class="empty">
+        <strong>No products match these filters.</strong>
+        <p>Clear filters or search for a broader instant photography term.</p>
+      </div>
+      }
+      }
+      }
+    </section>
+  </section>
+</div>

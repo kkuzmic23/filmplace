@@ -1,0 +1,44 @@
+<header class="site-header">
+  <a class="brand" routerLink="/" aria-label="Filmplace home">
+    <i class="brand-mark" aria-hidden="true"></i>
+    <strong>filmplace</strong>
+  </a>
+
+  <nav aria-label="Main navigation">
+    <a routerLink="/explore">Explore</a>
+    <a routerLink="/my-storefronts">My storefronts</a>
+    @if (auth.isAuthenticated()) {
+    <a routerLink="/orders">Orders</a>
+    @if (auth.user()?.role === 'ADMIN') {
+    <a routerLink="/admin">Admin</a>
+    }
+    }
+  </nav>
+
+  <div class="account-links">
+    @if (auth.user(); as user) {
+    <a routerLink="/my-account" class="welcome" aria-label="Open your profile">
+      <span class="profile-picture" aria-hidden="true">
+        {{ user.displayName.charAt(0) }}
+      </span>
+      <span>
+        {{ user.displayName }}
+      </span>
+    </a>
+    <a class="cart-link" routerLink="/cart">
+      Cart
+      <span>
+        {{ cart.itemCount() }}
+      </span>
+    </a>
+    <button class="text-button" type="button" (click)="logout()">Log out</button>
+    } @else {
+    <a routerLink="/login">Log in</a>
+    <a class="button button-small" routerLink="/register">Create account</a>
+    }
+  </div>
+</header>
+
+<main>
+  <router-outlet />
+</main>

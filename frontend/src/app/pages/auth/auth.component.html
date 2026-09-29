@@ -1,0 +1,91 @@
+<section class="auth">
+  <aside>
+    <div>
+      <div class="photo" aria-hidden="true">
+        <div></div>
+        <p>made for moments that stay</p>
+      </div>
+      <h1>Join the largest instant photography market in the world.</h1>
+      <p class="aside-copy">Buy and sell instant photography</p>
+    </div>
+  </aside>
+  <main>
+    <a routerLink="/">← Back to home</a>
+    <div class="card">
+      @if (register) {
+      <p>JOIN FILMPLACE</p>
+      <h2>Create your account</h2>
+      } @else {
+      <p>WELCOME BACK</p>
+      <h2>Log in to your account</h2>
+      }
+
+      <form [formGroup]="form" (ngSubmit)="submit()">
+        @if (register) {
+        <div class="names">
+          <label>
+            First name
+            <input formControlName="firstName" />
+          </label>
+
+          <label>
+            Last name
+            <input formControlName="lastName" />
+          </label>
+        </div>
+
+        <label>
+          Display name
+          <input formControlName="displayName" />
+        </label>
+
+        @if (form.controls.email.touched && form.controls.email.hasError('email')) {
+        <small>The first field must contain a valid Email.</small>
+        }
+        }
+
+        <label>
+          Email
+          <input type="email" formControlName="email" />
+        </label>
+
+        <label>
+          Password
+          <input type="password" formControlName="password" />
+        </label>
+
+        @if (
+        register && form.controls.password.touched && form.controls.password.hasError('minlength')
+        ) {
+        <small>Password must contain at least 8 characters.</small>
+        }
+
+        @if (error()) {
+        <small>{{ error() }}</small>
+        }
+
+        <button class="button" [disabled]="submitting()">
+          @if (submitting())
+          { Please wait…}
+          @else {
+          @if (register)
+          { Create account}
+          @else { Log in }
+          }
+        </button>
+      </form>
+
+      @if (register) {
+      <div>
+        Already have an account?
+        <a routerLink="/login">Log in</a>
+      </div>
+      } @else {
+      <div>
+        New to filmplace?
+        <a routerLink="/register">Create one</a>
+      </div>
+      }
+    </div>
+  </main>
+</section>
