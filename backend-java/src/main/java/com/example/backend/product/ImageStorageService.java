@@ -35,14 +35,19 @@ public class ImageStorageService {
         if (file.isEmpty() || file.getContentType() == null || !file.getContentType().startsWith("image/")) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Only image files can be uploaded");
         }
+
         String extension = extension(file.getOriginalFilename());
         String filename = UUID.randomUUID() + extension;
         Path destination = safeSource(filename);
+
         try {
             Files.copy(file.getInputStream(), destination, StandardCopyOption.REPLACE_EXISTING);
             BufferedImage source = ImageIO.read(destination.toFile());
+
             if (source == null) throw new IOException("Unsupported image format");
+
             for (int width : WIDTHS) createVariant(source, stem(filename), width);
+
             return "/images/" + filename;
         } catch (IOException exception) {
             delete("/images/" + filename);
@@ -53,11 +58,17 @@ public class ImageStorageService {
     public Path resolve(String filename, Integer width) {
         String safeName = safeFilename(filename);
         if (width == null) return safeSource(safeName);
+
         if (!WIDTHS.contains(width)) throw new ApiException(HttpStatus.BAD_REQUEST, "Unsupported image width");
+
         Path webp = variants.resolve(stem(safeName) + "-" + width + ".webp");
+
         if (Files.exists(webp)) return webp;
+
         Path jpeg = variants.resolve(stem(safeName) + "-" + width + ".jpg");
+
         if (Files.exists(jpeg)) return jpeg;
+
         try {
             BufferedImage source = ImageIO.read(safeSource(safeName).toFile());
             if (source == null) throw new IOException("Unsupported image format");
@@ -76,13 +87,14 @@ public class ImageStorageService {
                 for (Path file : files) Files.deleteIfExists(file);
             }
         } catch (IOException ignored) {
-            // The database operation should still succeed if a file is already absent.
+            //succeeds
         }
     }
 
     private void createVariant(BufferedImage source, String stem, int targetWidth) throws IOException {
         int width = Math.min(targetWidth, source.getWidth());
         int height = Math.max(1, (int) Math.round(source.getHeight() * (width / (double) source.getWidth())));
+
         BufferedImage resized = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
         Graphics2D graphics = resized.createGraphics();
         graphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);

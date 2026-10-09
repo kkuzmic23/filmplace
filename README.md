@@ -19,6 +19,18 @@ compose.yaml    Docker Compose configuration
 
 ### Start
 
+Create your local environment file and replace the two placeholder secrets:
+
+```bash
+cp .env.example .env
+```
+
+Generate a JWT signing secret with `openssl rand -base64 32` or another
+cryptographically secure generator. The value must contain at least 32 characters.
+The `.env` file is ignored by Git and must never be committed.
+
+Then start the application:
+
 ```bash
 docker compose up --build
 ```
@@ -91,3 +103,15 @@ PostgreSQL (:5432)
 The API handles authentication, storefronts, listings, product images, cart state, orders, admin catalog operations, and sitemap data. The frontend renders public pages on the server and marks account and management routes as non-indexable.
 
 Payment processing and shipping-provider integration are not included. Checkout creates orders and reserves inventory only.
+
+## Configuration
+
+All deploy-specific values are read from environment variables. See
+[`.env.example`](.env.example) for the complete list. `POSTGRES_PASSWORD` and
+`JWT_SECRET` are required; Docker Compose stops with a clear error when either is
+missing. `PUBLIC_API_URL` is served to the browser at runtime, so the same frontend
+image can be promoted between environments without rebuilding it.
+
+For production, use secret storage provided by your hosting platform, set
+`CORS_ORIGIN`, `PUBLIC_API_URL`, and `SITE_URL` to the public HTTPS URLs, and do not
+publish PostgreSQL or the backend port unless they need to be directly reachable.

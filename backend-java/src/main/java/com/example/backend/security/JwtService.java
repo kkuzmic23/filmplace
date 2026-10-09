@@ -33,8 +33,8 @@ public class JwtService {
 
     @PostConstruct
     void initializeSigningKey() throws Exception {
-        if (secret == null || secret.isBlank()) {
-            throw new IllegalStateException("JWT secret is required. Set JWT_SECRET in backend/.env.");
+        if (secret == null || secret.length() < 32) {
+            throw new IllegalStateException("JWT_SECRET must contain at least 32 characters.");
         }
 
         byte[] keyBytes = MessageDigest.getInstance("SHA-256").digest(secret.getBytes(StandardCharsets.UTF_8));

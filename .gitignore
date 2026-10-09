@@ -2,6 +2,8 @@
 **/node_modules/
 **/dist/
 **/target/
+**/.angular/
+**/coverage/
 
 **/.env
 **/.env.*
@@ -11,3 +13,5 @@
 .vscode/
 *.iml
 *.log
+.DS_Store
+Thumbs.db

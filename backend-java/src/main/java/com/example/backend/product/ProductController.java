@@ -48,10 +48,12 @@ import java.util.concurrent.TimeUnit;
 public class ProductController {
     private static final Set<String> TYPES = Set.of("CAMERA", "FILM", "ACCESSORY");
     private static final Set<String> STATUSES = Set.of("ACTIVE", "SOLD", "DRAFT", "ARCHIVED");
+
     private static final String CATALOG_FIELDS = """
             id, product_type, brand, name, format, film_type, camera_type,
             accessory_type, compatible_formats, active
             """;
+
     private static final RowMapper<CatalogProductResponse> CATALOG_MAPPER = (rs, rowNum) -> new CatalogProductResponse(
             rs.getObject("id", UUID.class), rs.getString("product_type"), rs.getString("brand"),
             rs.getString("name"), rs.getString("format"), rs.getString("film_type"),
@@ -86,16 +88,19 @@ public class ProductController {
         List<String> clauses = new ArrayList<>();
         List<Object> arguments = new ArrayList<>();
         boolean ownerView = false;
+
         if (storefront != null) {
             clauses.add("p.storefront_id = ?");
             arguments.add(storefront);
+
             if (user != null) {
-                Integer count = jdbc.queryForObject(
-                        "SELECT COUNT(*) FROM storefronts WHERE id = ? AND owner_id = ?",
+                Integer count = jdbc.queryForObject("SELECT COUNT(*) FROM storefronts WHERE id = ? AND owner_id = ?",
                         Integer.class, storefront, user.id());
+
                 ownerView = count != null && count > 0;
             }
         }
+
         if (!ownerView) clauses.add("p.status = 'ACTIVE'");
         addEquals(clauses, arguments, "pc.product_type", type != null && TYPES.contains(type) ? type : null);
         addEquals(clauses, arguments, "pc.brand", cleanQuery(brand));
@@ -103,6 +108,7 @@ public class ProductController {
         addEquals(clauses, arguments, "pc.format", cleanQuery(cameraFormat));
         addEquals(clauses, arguments, "pc.format", cleanQuery(filmFormat));
         addEquals(clauses, arguments, "pc.film_type", cleanQuery(filmType));
+
         if (minPrice != null) {
             clauses.add("p.price_cents >= ?");
             arguments.add(minPrice);
@@ -113,8 +119,7 @@ public class ProductController {
         }
         if (q != null && !q.trim().isEmpty()) {
             String pattern = "%" + q.trim() + "%";
-            clauses.add("(COALESCE(p.title_override, pc.name) ILIKE ? OR p.description ILIKE ? "
-                    + "OR pc.brand ILIKE ? OR pc.name ILIKE ? OR s.name ILIKE ?)");
+            clauses.add("(COALESCE(p.title_override, pc.name) ILIKE ? OR p.description ILIKE ? " + "OR pc.brand ILIKE ? OR pc.name ILIKE ? OR s.name ILIKE ?)");
             for (int i = 0; i < 5; i++) arguments.add(pattern);
         }
         String where = clauses.isEmpty() ? "" : " WHERE " + String.join(" AND ", clauses);
@@ -128,8 +133,11 @@ public class ProductController {
     ) {
         List<String> clauses = new ArrayList<>(List.of("active = true"));
         List<Object> arguments = new ArrayList<>();
+
         if (type != null && TYPES.contains(type)) addEquals(clauses, arguments, "product_type", type);
+
         addEquals(clauses, arguments, "brand", cleanQuery(brand));
+
         return jdbc.query(
                 "SELECT " + CATALOG_FIELDS + " FROM product_catalog WHERE " + String.join(" AND ", clauses)
                         + " ORDER BY product_type, brand, name, format, film_type",
@@ -148,9 +156,11 @@ public class ProductController {
         String productType = string(body.get("productType"));
         String brand = nullableString(body.get("brand"));
         String name = nullableString(body.get("name"));
+
         if (productType == null || !TYPES.contains(productType) || brand == null || name == null) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "A valid product type, brand, and name are required");
         }
+
         UUID id = UUID.randomUUID();
         try {
             jdbc.update("""
@@ -169,6 +179,7 @@ public class ProductController {
     @GetMapping("/api/products/catalog/statistics")
     public CatalogStatistics statistics(@AuthenticationPrincipal CurrentUser user) {
         requireAdmin(user);
+
         Map<String, Object> totals = jdbc.queryForMap("""
                 WITH active_catalog AS (SELECT id FROM product_catalog WHERE active = true),
                 recent_sales AS (
@@ -188,6 +199,7 @@ public class ProductController {
                            / (SELECT COUNT(*) FROM active_catalog) * 100)::int END AS sell_through,
                        completed_orders, units_sold FROM sale_totals
                 """);
+
         List<TopSellingProduct> top = jdbc.query("""
                 SELECT COALESCE(pc.name, oi.title) AS name, pc.brand, oi.product_type,
                        SUM(oi.quantity)::int AS units_sold
@@ -199,6 +211,7 @@ public class ProductController {
                 ORDER BY units_sold DESC, name LIMIT 10
                 """, (rs, rowNum) -> new TopSellingProduct(
                 rs.getString("name"), rs.getString("brand"), rs.getString("product_type"), rs.getInt("units_sold")));
+
         return new CatalogStatistics(
                 number(totals, "catalog_models"), number(totals, "models_sold"), number(totals, "sell_through"),
                 number(totals, "completed_orders"), number(totals, "units_sold"), top);
@@ -256,17 +269,22 @@ public class ProductController {
     ) {
         requireUser(user);
         Listing listing = parseListing(body, null);
+
         String catalogName = jdbc.query(
                 "SELECT name FROM product_catalog WHERE id = ? AND active = true",
                 (rs, rowNum) -> rs.getString("name"), listing.catalogProductId()).stream().findFirst()
                 .orElseThrow(() -> new ApiException(HttpStatus.BAD_REQUEST, "catalogProductId is invalid"));
+
         Integer owns = jdbc.queryForObject(
                 "SELECT COUNT(*) FROM storefronts WHERE id = ? AND owner_id = ?",
                 Integer.class, listing.storefrontId(), user.id());
+
         if (owns == null || owns == 0) {
             throw new ApiException(HttpStatus.FORBIDDEN, "You do not own this storefront");
         }
+
         UUID id = UUID.randomUUID();
+
         String slug = nextSlug(listing.storefrontId(), listing.titleOverride() == null ? catalogName : listing.titleOverride());
         insertOrUpdate(id, slug, listing, true);
         return findProduct(id);
@@ -281,13 +299,17 @@ public class ProductController {
         requireOwner(user, id, "Product not found or not owned by you");
         ProductResponse existing = findProduct(id);
         Listing listing = parseListing(body, existing);
+
         Integer catalog = jdbc.queryForObject(
                 "SELECT COUNT(*) FROM product_catalog WHERE id = ? AND active = true",
                 Integer.class, listing.catalogProductId());
+
         if (catalog == null || catalog == 0) throw new ApiException(HttpStatus.BAD_REQUEST, "catalogProductId is invalid");
+
         if (!listing.storefrontId().equals(existing.storefrontId())) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "A product cannot be moved between storefronts");
         }
+
         insertOrUpdate(id, existing.productSlug(), listing, false);
         return findProduct(id);
     }
@@ -297,9 +319,11 @@ public class ProductController {
     @Transactional
     public void delete(@AuthenticationPrincipal CurrentUser user, @PathVariable UUID id) {
         requireOwner(user, id, "Product not found or not owned by you");
+
         List<String> imageUrls = jdbc.query(
                 "SELECT image_url FROM product_images WHERE product_id = ?",
                 (rs, rowNum) -> rs.getString("image_url"), id);
+
         jdbc.update("DELETE FROM products WHERE id = ?", id);
         imageUrls.forEach(images::delete);
     }
@@ -315,19 +339,22 @@ public class ProductController {
         requireOwner(user, id, "You do not own this product");
         if (files.isEmpty()) throw new ApiException(HttpStatus.BAD_REQUEST, "At least one image is required");
         if (files.size() > 8) throw new ApiException(HttpStatus.BAD_REQUEST, "A maximum of eight images is allowed");
-        Integer maximum = jdbc.queryForObject(
-                "SELECT COALESCE(MAX(sort_order), -1) FROM product_images WHERE product_id = ?", Integer.class, id);
+
+        Integer maximum = jdbc.queryForObject("SELECT COALESCE(MAX(sort_order), -1) FROM product_images WHERE product_id = ?", Integer.class, id);
+
         int start = (maximum == null ? -1 : maximum) + 1;
         List<ProductImageResponse> created = new ArrayList<>();
         List<String> storedUrls = new ArrayList<>();
+
         try {
             for (int index = 0; index < files.size(); index++) {
                 String imageUrl = images.store(files.get(index));
                 storedUrls.add(imageUrl);
                 UUID imageId = UUID.randomUUID();
-                jdbc.update(
-                        "INSERT INTO product_images (id, product_id, image_url, sort_order) VALUES (?, ?, ?, ?)",
+
+                jdbc.update("INSERT INTO product_images (id, product_id, image_url, sort_order) VALUES (?, ?, ?, ?)",
                         imageId, id, imageUrl, start + index);
+
                 created.add(new ProductImageResponse(imageId, imageUrl, start + index));
             }
             return created;
@@ -345,10 +372,12 @@ public class ProductController {
             @PathVariable UUID imageId
     ) {
         requireOwner(user, id, "Product not found or not owned by you");
-        List<String> urls = jdbc.query(
-                "DELETE FROM product_images WHERE id = ? AND product_id = ? RETURNING image_url",
+
+        List<String> urls = jdbc.query("DELETE FROM product_images WHERE id = ? AND product_id = ? RETURNING image_url",
                 (rs, rowNum) -> rs.getString("image_url"), imageId, id);
+
         if (urls.isEmpty()) throw new ApiException(HttpStatus.NOT_FOUND, "Image not found");
+
         images.delete(urls.getFirst());
     }
 
@@ -358,9 +387,13 @@ public class ProductController {
             @RequestParam(name = "w", required = false) Integer width
     ) throws Exception {
         Path path = images.resolve(filename, width);
+
         if (!Files.exists(path)) throw new ApiException(HttpStatus.NOT_FOUND, "Image not found");
+
         String contentType = Files.probeContentType(path);
+
         if (contentType == null && path.toString().endsWith(".webp")) contentType = "image/webp";
+
         return ResponseEntity.ok()
                 .cacheControl(CacheControl.maxAge(365, TimeUnit.DAYS).cachePublic().immutable())
                 .header(HttpHeaders.CONTENT_TYPE, contentType == null ? "application/octet-stream" : contentType)
@@ -397,17 +430,20 @@ public class ProductController {
         Integer price = integerValue(body, "priceCents", existing == null ? null : existing.priceCents());
         Integer quantity = integerValue(body, "availableQuantity", existing == null ? 1 : existing.availableQuantity());
         String status = body.containsKey("status") ? string(body.get("status")) : existing == null ? "ACTIVE" : existing.status();
+
         if (storefrontId == null || catalogId == null || price == null || price < 0 || quantity == null || quantity < 0
                 || status == null || !STATUSES.contains(status)) {
             throw new ApiException(HttpStatus.BAD_REQUEST,
                     "catalogProductId, non-negative integer priceCents, availableQuantity, and a valid status are required");
         }
+
         String title = nullableFromBody(body, "titleOverride", existing == null ? null : existing.titleOverride());
         String description = nullableFromBody(body, "description", existing == null ? null : existing.description());
         String condition = nullableFromBody(body, "workingCondition", existing == null ? null : existing.workingCondition());
         String storage = nullableFromBody(body, "storageCondition", existing == null ? null : existing.storageCondition());
         Boolean hasMods = body.containsKey("hasMods") ? booleanOrNull(body.get("hasMods")) : existing == null ? null : existing.hasMods();
         LocalDate expiry = body.containsKey("expiryDate") ? dateOrNull(body.get("expiryDate")) : existing == null ? null : existing.expiryDate();
+
         return new Listing(storefrontId, catalogId, title, description, price, quantity, status, condition, hasMods, expiry, storage);
     }
 
@@ -415,11 +451,13 @@ public class ProductController {
         String base = Normalizer.normalize(title, Normalizer.Form.NFKD)
                 .replaceAll("\\p{M}", "").toLowerCase().replaceAll("[^a-z0-9]+", "-")
                 .replaceAll("(^-+|-+$)", "");
+
         if (base.isEmpty()) base = "listing";
         if (base.length() > 240) base = base.substring(0, 240).replaceAll("-+$", "");
-        List<String> existing = jdbc.query(
-                "SELECT slug FROM products WHERE storefront_id = ? AND slug LIKE ?",
+
+        List<String> existing = jdbc.query("SELECT slug FROM products WHERE storefront_id = ? AND slug LIKE ?",
                 (rs, rowNum) -> rs.getString("slug"), storefrontId, base + "%");
+
         if (!existing.contains(base)) return base;
         int suffix = 2;
         while (existing.contains(base + "-" + suffix)) suffix++;
@@ -462,6 +500,7 @@ public class ProductController {
     private String nullableString(Object value) {
         if (value == null) return null;
         if (!(value instanceof String text)) throw new ApiException(HttpStatus.BAD_REQUEST, "Text fields must be strings or null");
+
         String cleaned = text.trim();
         return cleaned.isEmpty() ? null : cleaned;
     }

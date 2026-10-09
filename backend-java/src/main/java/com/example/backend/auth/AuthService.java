@@ -32,6 +32,7 @@ public class AuthService {
     public AuthResponse register(RegisterRequest request) {
         String email = request.email().trim().toLowerCase();
         UUID id = UUID.randomUUID();
+
         try {
             jdbc.update(
                     "INSERT INTO users (id, first_name, last_name, display_name, email, password_hash) VALUES (?, ?, ?, ?, ?, ?)",
@@ -50,11 +51,10 @@ public class AuthService {
     }
 
     public AuthResponse login(LoginRequest request) {
-        UserResponse user = UserQueries.findByEmail(jdbc, request.email().trim().toLowerCase())
-                .orElseThrow(() -> new BadCredentialsException("Invalid email or password"));
+        UserResponse user = UserQueries.findByEmail(jdbc, request.email().trim().toLowerCase()).orElseThrow(() -> new BadCredentialsException("Invalid email or password"));
 
-        String passwordHash = jdbc.queryForObject(
-                "SELECT password_hash FROM users WHERE id = ?", String.class, user.id());
+        String passwordHash = jdbc.queryForObject("SELECT password_hash FROM users WHERE id = ?", String.class, user.id());
+
         if (!passwordEncoder.matches(request.password(), passwordHash)) {
             throw new BadCredentialsException("Invalid email or password");
         }

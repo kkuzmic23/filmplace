@@ -6,7 +6,15 @@ import { provideClientHydration, withEventReplay } from '@angular/platform-brows
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 import { authInterceptor } from './auth/auth.interceptor';
 
-export const PUBLIC_API_URL = 'http://localhost:8080/api';
+interface FilmplaceRuntimeConfig {
+  apiUrl?: string;
+}
+
+const runtimeConfig = (
+  globalThis as typeof globalThis & { filmplaceConfig?: FilmplaceRuntimeConfig }
+).filmplaceConfig;
+
+export const PUBLIC_API_URL = runtimeConfig?.apiUrl ?? 'http://localhost:8080/api';
 export const API_URL = new InjectionToken<string>('API_URL');
 
 export const appConfig: ApplicationConfig = {

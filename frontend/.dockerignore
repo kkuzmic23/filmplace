@@ -1,6 +1,8 @@
 node_modules/
 dist/
 .angular/
+.env
+.env.*
 .idea/
 *.iml
 .git/

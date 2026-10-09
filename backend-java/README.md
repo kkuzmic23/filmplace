@@ -13,8 +13,13 @@ docker compose up --build
 For backend development with PostgreSQL already running:
 
 ```bash
-./mvnw spring-boot:run
+cd backend-java
+cp ../.env.example .env
+sh mvnw spring-boot:run
 ```
+
+Replace the placeholder values in `.env` first. On Windows, use `mvnw.cmd` and
+`Copy-Item ../.env.example .env`.
 
 Required production settings are supplied through environment variables:
 
@@ -26,6 +31,10 @@ Required production settings are supplied through environment variables:
 | `JWT_SECRET` | JWT signing secret |
 | `CORS_ORIGIN` | Allowed frontend origin or comma-separated origins |
 | `IMAGES_PATH` | Uploaded-image directory |
+
+`DATABASE_PASSWORD` and `JWT_SECRET` are required. The JWT secret must contain at
+least 32 characters. Local `.env` files are ignored by Git; production secrets
+should come from the hosting platform's secret manager.
 
 ## API areas
 
@@ -45,5 +54,5 @@ All protected routes expect `Authorization: Bearer <accessToken>`. Checkout and 
 ## Test
 
 ```bash
-./mvnw test
+sh mvnw test
 ```

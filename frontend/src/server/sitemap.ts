@@ -1,6 +1,6 @@
 import type { RequestHandler } from 'express';
 
-const siteUrl = 'http://localhost:4200';
+const siteUrl = process.env['SITE_URL'] ?? 'http://localhost:4200';
 const sitemapApiUrl = process.env['SITEMAP_API_URL'] ?? 'http://localhost:8080/api/seo/sitemap';
 
 interface SitemapRecord {

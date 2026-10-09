@@ -58,6 +58,7 @@ public class OrderController {
     @Transactional
     public List<OrderResponse> checkout(@AuthenticationPrincipal CurrentUser user) {
         requireUser(user);
+
         List<CheckoutItem> items = jdbc.query("""
                 SELECT ci.product_id, ci.quantity, COALESCE(p.title_override, pc.name) AS title,
                        pc.product_type, p.price_cents, p.available_quantity, p.status,
@@ -71,27 +72,36 @@ public class OrderController {
                 rs.getString("product_type"), rs.getInt("price_cents"), rs.getInt("available_quantity"),
                 rs.getString("status"), rs.getObject("storefront_id", UUID.class),
                 rs.getObject("owner_id", UUID.class)), user.id());
+
         if (items.isEmpty()) throw new ApiException(HttpStatus.BAD_REQUEST, "Cart is empty");
+
         for (CheckoutItem item : items) {
             if (item.ownerId().equals(user.id())) {
                 throw new ApiException(HttpStatus.BAD_REQUEST, "You cannot purchase from your own storefront");
             }
+
             if (!"ACTIVE".equals(item.status()) || item.quantity() > item.available()) {
                 throw new ApiException(HttpStatus.BAD_REQUEST,
                         "Product " + item.title() + " is no longer available in that quantity");
             }
         }
+
         Map<UUID, List<CheckoutItem>> byStorefront = new LinkedHashMap<>();
+
         for (CheckoutItem item : items) {
             byStorefront.computeIfAbsent(item.storefrontId(), ignored -> new ArrayList<>()).add(item);
         }
+
         List<UUID> orderIds = new ArrayList<>();
+
         for (Map.Entry<UUID, List<CheckoutItem>> entry : byStorefront.entrySet()) {
             int total = entry.getValue().stream().mapToInt(item -> item.priceCents() * item.quantity()).sum();
+
             UUID orderId = UUID.randomUUID();
-            jdbc.update(
-                    "INSERT INTO orders (id, buyer_id, storefront_id, total_cents) VALUES (?, ?, ?, ?)",
+
+            jdbc.update("INSERT INTO orders (id, buyer_id, storefront_id, total_cents) VALUES (?, ?, ?, ?)",
                     orderId, user.id(), entry.getKey(), total);
+
             for (CheckoutItem item : entry.getValue()) {
                 jdbc.update("""
                         INSERT INTO order_items
@@ -99,6 +109,7 @@ public class OrderController {
                         VALUES (?, ?, ?, ?, ?, ?, ?)
                         """, UUID.randomUUID(), orderId, item.productId(), item.title(), item.productType(),
                         item.priceCents(), item.quantity());
+
                 jdbc.update("""
                         UPDATE products SET available_quantity = available_quantity - ?,
                             status = CASE WHEN available_quantity - ? = 0 THEN 'SOLD' ELSE status END,
@@ -114,6 +125,7 @@ public class OrderController {
     @GetMapping("/{id}")
     public OrderResponse get(@AuthenticationPrincipal CurrentUser user, @PathVariable UUID id) {
         requireUser(user);
+
         return orders(" WHERE o.id = ? AND (o.buyer_id = ? OR s.owner_id = ?)", id, user.id(), user.id())
                 .stream().findFirst()
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Order not found"));
@@ -127,11 +139,13 @@ public class OrderController {
             @RequestBody Map<String, Object> body
     ) {
         requireUser(user);
+
         String target = body.get("status") instanceof String value ? value : "";
+
         if (target == null || !Set.of("ACCEPTED", "SHIPPED", "COMPLETED", "CANCELLED").contains(target)) {
-            throw new ApiException(HttpStatus.BAD_REQUEST,
-                    "status must be ACCEPTED, SHIPPED, COMPLETED, or CANCELLED");
+            throw new ApiException(HttpStatus.BAD_REQUEST, "status must be ACCEPTED, SHIPPED, COMPLETED, or CANCELLED");
         }
+
         CurrentOrder current = jdbc.query("""
                 SELECT o.buyer_id, o.status, s.owner_id FROM orders o
                 JOIN storefronts s ON s.id = o.storefront_id WHERE o.id = ? FOR UPDATE OF o
@@ -141,13 +155,14 @@ public class OrderController {
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Order not found"));
 
         boolean seller = current.ownerId().equals(user.id());
-        boolean buyerCancellation = current.buyerId().equals(user.id())
-                && "PENDING".equals(current.status()) && "CANCELLED".equals(target);
+        boolean buyerCancellation = current.buyerId().equals(user.id()) && "PENDING".equals(current.status()) && "CANCELLED".equals(target);
+
         Map<String, Set<String>> transitions = Map.of(
                 "PENDING", Set.of("ACCEPTED", "CANCELLED"),
                 "ACCEPTED", Set.of("SHIPPED", "CANCELLED"),
                 "SHIPPED", Set.of("COMPLETED")
         );
+
         if (!buyerCancellation && (!seller || !transitions.getOrDefault(current.status(), Set.of()).contains(target))) {
             throw new ApiException(HttpStatus.FORBIDDEN, "This order status change is not allowed");
         }
@@ -188,6 +203,7 @@ public class OrderController {
                 """, (rs, rowNum) -> new OrderItemResponse(
                 rs.getObject("id", UUID.class), rs.getObject("product_id", UUID.class), rs.getString("title"),
                 rs.getString("product_type"), rs.getInt("unit_price_cents"), rs.getInt("quantity")), order.id());
+
         return new OrderResponse(
                 order.id(), order.buyerId(), order.storefrontId(), order.status(), order.totalCents(),
                 order.createdAt(), order.updatedAt(), order.storefrontName(), order.storefrontSlug(),

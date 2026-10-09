@@ -78,6 +78,7 @@ public class ProductRepository {
         String type = rs.getString("product_type");
         String format = rs.getString("format");
         java.sql.Date expiry = rs.getDate("expiry_date");
+
         return new ProductResponse(
                 rs.getObject("id", UUID.class),
                 rs.getObject("storefront_id", UUID.class),

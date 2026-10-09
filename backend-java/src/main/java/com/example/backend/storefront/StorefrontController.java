@@ -31,11 +31,13 @@ import java.util.regex.Pattern;
 public class StorefrontController {
     private static final Set<String> THEMES = Set.of("theme-1", "theme-2", "theme-3", "theme-4", "theme-5");
     private static final Pattern SLUG = Pattern.compile("^[a-z0-9]+(?:-[a-z0-9]+)*$");
+
     private static final String SELECT = """
             SELECT s.id, s.owner_id, s.name, s.slug, s.description, s.theme,
                    s.created_at, s.updated_at, u.display_name AS owner_display_name
             FROM storefronts s JOIN users u ON u.id = s.owner_id
             """;
+
     private static final RowMapper<StorefrontResponse> MAPPER = (rs, rowNum) -> new StorefrontResponse(
             rs.getObject("id", UUID.class),
             rs.getObject("owner_id", UUID.class),
@@ -60,6 +62,7 @@ public class StorefrontController {
         if (query.isEmpty()) {
             return jdbc.query(SELECT + " ORDER BY s.created_at DESC", MAPPER);
         }
+
         String pattern = "%" + query + "%";
         return jdbc.query(
                 SELECT + " WHERE s.name ILIKE ? OR s.description ILIKE ? OR s.slug ILIKE ? ORDER BY s.created_at DESC",
@@ -124,9 +127,11 @@ public class StorefrontController {
         }
         if (body.containsKey("slug")) {
             String slug = body.get("slug") instanceof String value ? value : "";
+
             if (!SLUG.matcher(slug).matches() || slug.length() > 150) {
                 throw new ApiException(HttpStatus.BAD_REQUEST, "Slug must use lowercase letters, numbers, and hyphens");
             }
+
             assignments.add("slug = ?");
             arguments.add(slug);
         }
@@ -136,9 +141,11 @@ public class StorefrontController {
         }
         if (body.containsKey("theme")) {
             String theme = body.get("theme") instanceof String value ? value : "";
+
             if (theme == null || !THEMES.contains(theme)) {
                 throw new ApiException(HttpStatus.BAD_REQUEST, "A valid theme is required");
             }
+
             assignments.add("theme = ?");
             arguments.add(theme);
         }
@@ -149,9 +156,7 @@ public class StorefrontController {
         arguments.add(id);
         arguments.add(user.id());
         try {
-            int changed = jdbc.update(
-                    "UPDATE storefronts SET " + String.join(", ", assignments)
-                            + ", updated_at = now() WHERE id = ? AND owner_id = ?",
+            int changed = jdbc.update("UPDATE storefronts SET " + String.join(", ", assignments) + ", updated_at = now() WHERE id = ? AND owner_id = ?",
                     arguments.toArray()
             );
             if (changed == 0) {
@@ -169,14 +174,18 @@ public class StorefrontController {
         requireUser(user);
         Integer owned = jdbc.queryForObject(
                 "SELECT COUNT(*) FROM storefronts WHERE id = ? AND owner_id = ?", Integer.class, id, user.id());
+
         if (owned == null || owned == 0) {
             throw new ApiException(HttpStatus.NOT_FOUND, "Storefront not found or not owned by you");
         }
+
         Integer products = jdbc.queryForObject(
                 "SELECT COUNT(*) FROM products WHERE storefront_id = ?", Integer.class, id);
+
         if (products != null && products > 0) {
             throw new ApiException(HttpStatus.CONFLICT, "Storefronts with products cannot be deleted");
         }
+
         jdbc.update("DELETE FROM storefronts WHERE id = ?", id);
     }
 

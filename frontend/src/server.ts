@@ -12,6 +12,7 @@ import { constants } from 'node:zlib';
 import { sitemapHandler } from './server/sitemap.js';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
+const publicApiUrl = process.env['PUBLIC_API_URL'] ?? 'http://localhost:8080/api';
 
 const app = express();
 const angularApp = new AngularNodeAppEngine();
@@ -28,6 +29,13 @@ app.use(
 );
 
 app.get('/sitemap.xml', sitemapHandler);
+
+app.get('/config.js', (_req, res) => {
+  res
+    .type('application/javascript')
+    .set('Cache-Control', 'no-store')
+    .send(`globalThis.filmplaceConfig = ${JSON.stringify({ apiUrl: publicApiUrl })};`);
+});
 
 app.use(
   express.static(browserDistFolder, {

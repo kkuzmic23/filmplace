@@ -55,31 +55,39 @@ public class UserController {
 
         if (body.containsKey("email")) {
             String email = body.get("email") instanceof String value ? value.trim().toLowerCase() : "";
+
             if (!EMAIL.matcher(email).matches() || email.length() > 255) {
                 throw new ApiException(HttpStatus.BAD_REQUEST, "A valid email is required");
             }
+
             assignments.add("email = ?");
             arguments.add(email);
         }
 
         if (body.containsKey("bio")) {
             Object raw = body.get("bio");
+
             if (raw != null && !(raw instanceof String)) {
                 throw new ApiException(HttpStatus.BAD_REQUEST, "Bio must be a string or null");
             }
+
             String bio = raw == null ? null : ((String) raw).trim();
+
             if (bio != null && bio.length() > 1000) {
                 throw new ApiException(HttpStatus.BAD_REQUEST, "Bio must be 1000 characters or fewer");
             }
+
             assignments.add("bio = ?");
             arguments.add(bio == null || bio.isEmpty() ? null : bio);
         }
 
         if (body.containsKey("password")) {
             String password = body.get("password") instanceof String value ? value : "";
+
             if (password.length() < 8 || password.length() > 72) {
                 throw new ApiException(HttpStatus.BAD_REQUEST, "Password must be between 8 and 72 characters");
             }
+
             assignments.add("password_hash = ?");
             arguments.add(passwordEncoder.encode(password));
         }
@@ -90,10 +98,7 @@ public class UserController {
 
         arguments.add(currentUser.id());
         try {
-            jdbc.update(
-                    "UPDATE users SET " + String.join(", ", assignments) + ", updated_at = now() WHERE id = ?",
-                    arguments.toArray()
-            );
+            jdbc.update("UPDATE users SET " + String.join(", ", assignments) + ", updated_at = now() WHERE id = ?", arguments.toArray());
         } catch (DuplicateKeyException exception) {
             throw new ApiException(HttpStatus.CONFLICT, "Email is already registered");
         }
@@ -119,10 +124,13 @@ public class UserController {
             List<Object> arguments
     ) {
         if (!body.containsKey(input)) return;
+
         String value = body.get(input) instanceof String text ? text.trim() : "";
+
         if (value.isEmpty() || value.length() > maximum) {
             throw new ApiException(HttpStatus.BAD_REQUEST, input + " must be a non-empty string");
         }
+
         assignments.add(column + " = ?");
         arguments.add(value);
     }
