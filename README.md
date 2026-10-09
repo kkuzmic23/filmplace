@@ -1,6 +1,6 @@
 # Filmplace
 
-Filmplace is a full-stack marketplace for instant cameras, film, and accessories. Users can create storefronts, list products, browse and filter active listings, add items to a cart, and manage orders.
+Filmplace is a marketplace for instant cameras, film, and accessories. Users can create storefronts, list products, browse and filter active listings, add items to a cart, and manage orders.
 
 ## Explore the marketplace
 <img width="480" height="360" alt="explore-1" src="https://github.com/user-attachments/assets/0b343458-967d-4a60-9c24-68a724a40f3b" /><br>
